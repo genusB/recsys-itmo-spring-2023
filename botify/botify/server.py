@@ -11,9 +11,8 @@ from gevent.pywsgi import WSGIServer
 
 from botify.data import DataLogger, Datum
 from botify.experiment import Experiments, Treatment
-from botify.recommenders.contextual import Contextual
 from botify.recommenders.contextual_hw import ContextualHW
-from botify.recommenders.random import Random
+from botify.recommenders.contextual import Contextual
 from botify.track import Catalog
 
 import numpy as np
@@ -25,18 +24,28 @@ app = Flask(__name__)
 app.config.from_file("config.json", load=json.load)
 api = Api(app)
 
+# TODO Seminar 6 step 3: Create redis DB with tracks with diverse recommendations
 tracks_redis = Redis(app, config_prefix="REDIS_TRACKS")
-tracks_hw_redis = Redis(app, config_prefix="REDIS_HW_TRACKS")
+artists_redis = Redis(app, config_prefix="REDIS_ARTIST")
+recommendations_redis = Redis(app, config_prefix="REDIS_RECOMMENDATIONS")
+recommendations_ub_redis = Redis(app, config_prefix="REDIS_RECOMMENDATIONS_UB")
 
 data_logger = DataLogger(app)
 
+# TODO Seminar 6 step 4: Upload tracks with diverse recommendations to redis DB
 catalog = Catalog(app).load(
     app.config["TRACKS_CATALOG"], app.config["TOP_TRACKS_CATALOG"]
 )
+
 catalog.upload_tracks(tracks_redis.connection)
 
 users_cache = {i: [] for i in range(10_000)}
 users_tracks_for_recs = {i: [] for i in range(10_000)}
+
+catalog.upload_artists(artists_redis.connection)
+catalog.upload_recommendations(recommendations_redis.connection)
+catalog.upload_recommendations(recommendations_ub_redis.connection, "RECOMMENDATIONS_UB_FILE_PATH")
+
 
 parser = reqparse.RequestParser()
 parser.add_argument("track", type=int, location="json", required=True)
@@ -66,8 +75,10 @@ class NextTrack(Resource):
 
         args = parser.parse_args()
 
+
         # TODO Seminar 5 step 3: Wire CONTEXTUAL A/B experiment
         treatment = Experiments.CONTEXTUAL2.assign(user)
+
         if treatment == Treatment.T1:
             recommender = ContextualHW(tracks_redis.connection, catalog, catalog.top_tracks[:100], users_cache, users_tracks_for_recs, 15)
         else:
