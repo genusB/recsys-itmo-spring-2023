@@ -34,7 +34,7 @@ data_logger = DataLogger(app)
 
 # TODO Seminar 6 step 4: Upload tracks with diverse recommendations to redis DB
 catalog = Catalog(app).load(
-    app.config["TRACKS_CATALOG"], app.config["TOP_TRACKS_CATALOG"], app.config["TRACKS_WITH_DIVERSE_RECS_CATALOG"]
+    app.config["TRACKS_CATALOG"], app.config["TOP_TRACKS_CATALOG"]
 )
 
 catalog.upload_tracks(tracks_redis.connection)
