@@ -26,6 +26,7 @@ api = Api(app)
 
 # TODO Seminar 6 step 3: Create redis DB with tracks with diverse recommendations
 tracks_redis = Redis(app, config_prefix="REDIS_TRACKS")
+tracks_with_diverse_recs_redis = Redis(app, config_prefix="REDIS_TRACKS_WITH_DIVERSE_RECS")
 artists_redis = Redis(app, config_prefix="REDIS_ARTIST")
 recommendations_redis = Redis(app, config_prefix="REDIS_RECOMMENDATIONS")
 
@@ -33,7 +34,7 @@ data_logger = DataLogger(app)
 
 # TODO Seminar 6 step 4: Upload tracks with diverse recommendations to redis DB
 catalog = Catalog(app).load(
-    app.config["TRACKS_CATALOG"], app.config["TOP_TRACKS_CATALOG"]
+    app.config["TRACKS_CATALOG"], app.config["TOP_TRACKS_CATALOG"], app.config["TRACKS_WITH_DIVERSE_RECS_CATALOG"]
 )
 
 catalog.upload_tracks(tracks_redis.connection)
@@ -72,7 +73,6 @@ class NextTrack(Resource):
         start = time.time()
 
         args = parser.parse_args()
-
 
         # TODO Seminar 5 step 3: Wire CONTEXTUAL A/B experiment
         treatment = Experiments.CONTEXTUAL2.assign(user)

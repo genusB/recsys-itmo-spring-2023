@@ -45,8 +45,6 @@ class Catalog:
             self.top_tracks = json.load(top_tracks_path_file)
         self.app.logger.info(f"Loaded top tracks {self.top_tracks[:3]} ...")
 
-        self.app.logger.info(f"Loaded {j + 1} tracks with diverse recs")
-
         return self
 
     # TODO Seminar 6 step 2: Configure uploading tracks with diverse recommendations to redis DB
