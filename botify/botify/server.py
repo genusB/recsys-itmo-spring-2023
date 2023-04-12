@@ -12,6 +12,7 @@ from gevent.pywsgi import WSGIServer
 from botify.data import DataLogger, Datum
 from botify.experiment import Experiments, Treatment
 from botify.recommenders.contextual import Contextual
+from botify.recommenders.contextual_hw import ContextualHW
 from botify.recommenders.random import Random
 from botify.track import Catalog
 
@@ -25,8 +26,7 @@ app.config.from_file("config.json", load=json.load)
 api = Api(app)
 
 tracks_redis = Redis(app, config_prefix="REDIS_TRACKS")
-artists_redis = Redis(app, config_prefix="REDIS_ARTIST")
-recommendations_redis = Redis(app, config_prefix="REDIS_RECOMMENDATIONS")
+tracks_hw_redis = Redis(app, config_prefix="REDIS_HW_TRACKS")
 
 data_logger = DataLogger(app)
 
@@ -34,8 +34,9 @@ catalog = Catalog(app).load(
     app.config["TRACKS_CATALOG"], app.config["TOP_TRACKS_CATALOG"]
 )
 catalog.upload_tracks(tracks_redis.connection)
-catalog.upload_artists(artists_redis.connection)
-catalog.upload_recommendations(recommendations_redis.connection)
+
+users_cache = {i: [] for i in range(10_000)}
+users_tracks_for_recs = {i: [] for i in range(10_000)}
 
 parser = reqparse.RequestParser()
 parser.add_argument("track", type=int, location="json", required=True)
@@ -66,11 +67,11 @@ class NextTrack(Resource):
         args = parser.parse_args()
 
         # TODO Seminar 5 step 3: Wire CONTEXTUAL A/B experiment
-        treatment = Experiments.CONTEXTUAL.assign(user)
+        treatment = Experiments.CONTEXTUAL2.assign(user)
         if treatment == Treatment.T1:
-            recommender = Contextual(tracks_redis.connection, catalog)
+            recommender = ContextualHW(tracks_redis.connection, catalog, catalog.top_tracks[:100], users_cache, users_tracks_for_recs, 15)
         else:
-            recommender = Random(tracks_redis.connection)
+            recommender = Contextual(tracks_redis.connection, catalog)
 
         recommendation = recommender.recommend_next(user, args.track, args.time)
 
