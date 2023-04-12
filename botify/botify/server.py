@@ -28,7 +28,6 @@ api = Api(app)
 tracks_redis = Redis(app, config_prefix="REDIS_TRACKS")
 artists_redis = Redis(app, config_prefix="REDIS_ARTIST")
 recommendations_redis = Redis(app, config_prefix="REDIS_RECOMMENDATIONS")
-recommendations_ub_redis = Redis(app, config_prefix="REDIS_RECOMMENDATIONS_UB")
 
 data_logger = DataLogger(app)
 
@@ -44,7 +43,6 @@ users_tracks_for_recs = {i: [] for i in range(10_000)}
 
 catalog.upload_artists(artists_redis.connection)
 catalog.upload_recommendations(recommendations_redis.connection)
-catalog.upload_recommendations(recommendations_ub_redis.connection, "RECOMMENDATIONS_UB_FILE_PATH")
 
 
 parser = reqparse.RequestParser()
