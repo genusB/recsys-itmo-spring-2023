@@ -19,7 +19,7 @@
 ![experiment](./results.png)
 
 ## 2. Ссылка на репозиторий и инструкцию по запуску.
-Репозиторий: https://github.com/genusB/recsys-itmo-spring-2023
+Репозиторий: https://github.com/genusB/recsys-itmo-spring-2023, ветка homework
 Запуск контейнера с рекомендором: docker-compose up -d --build .
 Запуск симмулятора: python sim/run.py --episodes 3000 --config config/env.yml multi --processes 2
 
